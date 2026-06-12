@@ -25,7 +25,7 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 PRIMARY_MODEL = "gemini-2.5-flash"
-FALLBACK_MODEL = "gemini-1.5-flash"
+FALLBACK_MODEL = "gemini-2.0-flash"
 
 primary_model = genai.GenerativeModel(PRIMARY_MODEL)
 
@@ -99,14 +99,14 @@ Question:
         error_text = str(e)
 
         if "429" in error_text or "quota" in error_text.lower():
-            st.warning("Gemini 2.5 Flash quota exhausted. Trying Gemini 1.5 Flash...")
+            st.warning("Gemini 2.5 Flash quota exhausted. Trying Gemini 2.0 Flash...")
 
             try:
                 fallback_model = genai.GenerativeModel(FALLBACK_MODEL)
                 response = fallback_model.generate_content(prompt)
 
             except Exception:
-                st.error("Both Gemini 2.5 Flash and Gemini 1.5 Flash are unavailable due to quota limits.")
+                st.error("Both Gemini 2.5 Flash and Gemini 2.0 Flash are unavailable due to quota limits.")
                 st.stop()
 
         else:
