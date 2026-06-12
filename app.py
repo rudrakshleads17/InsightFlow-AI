@@ -1,24 +1,22 @@
-import os
 
-
-api_key = os.getenv("API_KEY")
 
 import streamlit as st
-import sqlite3
-import pandas as pd
 import google.generativeai as genai
 
-# ---------------------------
-# CONFIG
-# ---------------------------
+api_key = st.secrets["API_KEY"]
 
-genai.configure(api_key="API_KEY")
+st.write("API key loaded:", api_key is not None)
+st.write("API key length:", len(api_key) if api_key else 0)
 
-model = genai.GenerativeModel("gemini-2.5-flash")
 
-# ---------------------------
-# UI
-# ---------------------------
+genai.configure(api_key=api_key)
+
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+st.write("App started")
+st.write("Secret exists")
+
+#Tempppppppppppppppppppppppppppppppppppppppppppppppp
 
 st.set_page_config(
     page_title="InsightFlow AI",
@@ -87,9 +85,14 @@ Question:
 {question}
 """
 
+    try:
     response = model.generate_content(prompt)
 
-    sql_query = response.text.strip()
+except Exception as e:
+    st.error(f"Gemini Error: {e}")
+    st.stop()
+
+sql_query = response.text.strip()
 
     if "SELECT" in sql_query:
         sql_query = sql_query[sql_query.index("SELECT"):]
