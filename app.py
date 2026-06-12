@@ -1,28 +1,23 @@
-
-
 import streamlit as st
 import google.generativeai as genai
-
-api_key = st.secrets["API_KEY"]
-
-st.write("API key loaded:", api_key is not None)
-st.write("API key length:", len(api_key) if api_key else 0)
-
-
-genai.configure(api_key=api_key)
-
-model = genai.GenerativeModel("gemini-1.5-flash")
-
-st.write("App started")
-st.write("Secret exists")
-
-#Tempppppppppppppppppppppppppppppppppppppppppppppppp
+import sqlite3
+import pandas as pd
 
 st.set_page_config(
     page_title="InsightFlow AI",
     page_icon="📊",
     layout="wide"
 )
+
+api_key = st.secrets["API_KEY"]
+
+
+
+genai.configure(api_key=api_key)
+
+model = genai.GenerativeModel("gemini-2.5-flash")
+
+#Tempppppppppppppppppppppppppppppppppppppppppppppppp
 
 st.title("📊 InsightFlow AI")
 st.subheader("Natural Language Business Intelligence Platform powered by Gemini and SQL Analytics")
@@ -86,13 +81,13 @@ Question:
 """
 
     try:
-    response = model.generate_content(prompt)
+        response = model.generate_content(prompt)
 
-except Exception as e:
-    st.error(f"Gemini Error: {e}")
-    st.stop()
+    except Exception as e:
+        st.error(f"Gemini Error: {e}")
+        st.stop()
 
-sql_query = response.text.strip()
+    sql_query = response.text.strip()
 
     if "SELECT" in sql_query:
         sql_query = sql_query[sql_query.index("SELECT"):]
@@ -104,6 +99,9 @@ sql_query = response.text.strip()
 
     st.subheader("Generated SQL")
     st.code(sql_query, language="sql")
+
+    import sqlite3
+    import pandas as pd
 
     conn = sqlite3.connect("company_data.db")
 
@@ -126,20 +124,21 @@ sql_query = response.text.strip()
 
                 st.bar_chart(df[chart_col])
 
-        # AI Business Summary
-
         summary_prompt = f"""
-        Summarize this business data in 3 bullet points.
+Summarize this business data in 3 bullet points.
 
-        Data:
-        {df.to_string()}
-        """
+Data:
+{df.to_string()}
+"""
 
-        summary = model.generate_content(summary_prompt)
+        try:
+            summary = model.generate_content(summary_prompt)
 
-        st.subheader("Business Insights")
+            st.subheader("Business Insights")
+            st.write(summary.text)
 
-        st.write(summary.text)
+        except Exception:
+            st.warning("Business Insights unavailable due to Gemini API limits.")
 
     except Exception as e:
 
