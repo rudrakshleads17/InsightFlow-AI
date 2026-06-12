@@ -2,6 +2,8 @@ import streamlit as st
 import google.generativeai as genai
 import sqlite3
 import pandas as pd
+import os
+from dotenv import load_dotenv
 
 st.set_page_config(
     page_title="InsightFlow AI",
@@ -9,8 +11,13 @@ st.set_page_config(
     layout="wide"
 )
 
-api_key = st.secrets["API_KEY"]
+load_dotenv()
 
+api_key = os.getenv("API_KEY")
+
+if not api_key:
+    st.error("API key not found")
+    st.stop()
 
 
 genai.configure(api_key=api_key)
@@ -103,7 +110,7 @@ Question:
     import sqlite3
     import pandas as pd
 
-    conn = sqlite3.connect("company_data.db")
+    conn = sqlite3.connect("database/company_data.db")
 
     try:
 
