@@ -16,15 +16,15 @@ load_dotenv()
 api_key = os.getenv("API_KEY")
 
 if not api_key:
-    st.error("API key not found")
-    st.stop()
-
+    try:
+        api_key = st.secrets["API_KEY"]
+    except Exception:
+        st.error("API key not found. Please configure .env locally or Streamlit Secrets in deployment.")
+        st.stop()
 
 genai.configure(api_key=api_key)
 
 model = genai.GenerativeModel("gemini-2.5-flash")
-
-#Tempppppppppppppppppppppppppppppppppppppppppppppppp
 
 st.title("📊 InsightFlow AI")
 st.subheader("Natural Language Business Intelligence Platform powered by Gemini and SQL Analytics")
