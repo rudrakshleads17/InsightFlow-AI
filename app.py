@@ -29,6 +29,15 @@ FALLBACK_MODEL = "gemini-2.0-flash"
 
 primary_model = genai.GenerativeModel(PRIMARY_MODEL)
 
+PREDEFINED_QUERIES = {
+    "show all customers": "SELECT * FROM customers;",
+    "show all open support tickets": "SELECT * FROM support_tickets WHERE status = 'Open';",
+    "show product usage": "SELECT * FROM product_usage;",
+    "which customers are on premium plans": "SELECT * FROM customers WHERE plan = 'Premium';",
+    "show all high severity tickets": "SELECT * FROM support_tickets WHERE severity = 'High';",
+    "show enterprise customers": "SELECT * FROM customers WHERE plan = 'Enterprise';"
+}
+
 st.title("📊 InsightFlow AI")
 st.subheader("Natural Language Business Intelligence Platform powered by Gemini and SQL Analytics")
 
@@ -51,6 +60,8 @@ if st.button("Generate Insights"):
     if not question.strip():
         st.warning("Please enter a business question.")
         st.stop()
+
+    question_lower = question.lower().strip()
 
     prompt = f"""
 You are an expert SQLite SQL generator.
@@ -92,28 +103,33 @@ Question:
 {question}
 """
 
-    try:
-        response = primary_model.generate_content(prompt)
+    if question_lower in PREDEFINED_QUERIES:
+        sql_query = PREDEFINED_QUERIES[question_lower]
+        st.info("Using predefined query (no AI credits consumed).")
 
-    except Exception as e:
-        error_text = str(e)
+    else:
+        try:
+            response = primary_model.generate_content(prompt)
 
-        if "429" in error_text or "quota" in error_text.lower():
-            st.warning("Gemini 2.5 Flash quota exhausted. Trying Gemini 2.0 Flash...")
+        except Exception as e:
+            error_text = str(e)
 
-            try:
-                fallback_model = genai.GenerativeModel(FALLBACK_MODEL)
-                response = fallback_model.generate_content(prompt)
+            if "429" in error_text or "quota" in error_text.lower():
+                st.warning("Gemini 2.5 Flash quota exhausted. Trying Gemini 2.0 Flash...")
 
-            except Exception:
-                st.error("Both Gemini 2.5 Flash and Gemini 2.0 Flash are unavailable due to quota limits.")
+                try:
+                    fallback_model = genai.GenerativeModel(FALLBACK_MODEL)
+                    response = fallback_model.generate_content(prompt)
+
+                except Exception:
+                    st.error("Both Gemini models are unavailable due to quota limits.")
+                    st.stop()
+
+            else:
+                st.error(f"Gemini Error: {e}")
                 st.stop()
 
-        else:
-            st.error(f"Gemini Error: {e}")
-            st.stop()
-
-    sql_query = response.text.strip()
+        sql_query = response.text.strip()
 
     if "SELECT" in sql_query:
         sql_query = sql_query[sql_query.index("SELECT"):]
